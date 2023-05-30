@@ -1,0 +1,25 @@
+<!-- templates/index.html -->
+
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">URL Shortener</h1>
+    <form method="POST" action="/">
+        <div class="mb-3">
+            <label for="url" class="form-label">Enter a URL:</label>
+            <input type="text" class="form-control" id="url" name="url" placeholder="https://example.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Shorten</button>
+    </form>
+
+    {% if short_url %}
+    <div class="mt-4">
+        <h2 class="output-label">Shortened URL:</h2>
+        <div class="input-like">
+            <input type="text" class="form-control" value="{{ short_url }}" readonly>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
