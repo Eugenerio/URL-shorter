@@ -33,15 +33,11 @@ To get started with the URL Shortener application, follow the instructions below
   
    ```shell
    cd url-shortener
-3. Install the required dependencies:
-
-   ```shell
-   pip install -r requirements.txt
-4. Run the application:
+3. Run the application:
   
    ```shell
    python main.py
-5. Open your web browser and navigate to http://localhost:5000 to access the URL Shortener.
+4. Open your web browser and navigate to http://localhost:5000 to access the URL Shortener.
 
 ## Customization
 You can customize the appearance and behavior of the URL Shortener application by modifying the HTML templates (index.html and layout.html) and the CSS styles (styles.css) located in the templates and static directories, respectively.
