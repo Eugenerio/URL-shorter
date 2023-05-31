@@ -28,7 +28,7 @@ To get started with the URL Shortener application, follow the instructions below
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/your-username/url-shortener.git
+   git clone https://github.com/Eugenerio/url-shortener.git
 2. Change into the project directory:
   
    ```shell
