@@ -2,11 +2,13 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const cleanHistoryBtn = document.getElementById('clean-history-btn');
-    cleanHistoryBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clean the history? This action cannot be undone.')) {
-            cleanHistory();
-        }
-    });
+    if (cleanHistoryBtn) {
+        cleanHistoryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clean the history? This action cannot be undone.')) {
+                cleanHistory();
+            }
+        });
+    }
 
     function cleanHistory() {
         fetch('/clean-history', {

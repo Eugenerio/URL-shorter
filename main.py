@@ -2,7 +2,30 @@ import string
 import random
 import sqlite3
 from flask import Flask, render_template, request, redirect
+import validators
+import requests
+from bs4 import BeautifulSoup
 
+def get_url_preview(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    title = soup.find('title').get_text()
+    description = soup.find('meta', attrs={'name': 'description'})
+    description = description['content'] if description else ''
+    
+    return title, description
+
+
+def store_url(long_url, short_alias):
+    if not validators.url(long_url):
+        return 'Invalid URL'
+    
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('INSERT INTO urls (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
+    conn.commit()
+    conn.close()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -44,7 +67,7 @@ def clean_history():
     c.execute('DELETE FROM history')
     conn.commit()
     conn.close()
-    return '', 204
+    return redirect('/', code=302)
 
 
 def get_history():
@@ -82,8 +105,12 @@ def index():
         long_url = request.form['url']
         short_alias = generate_short_alias()
         store_url(long_url, short_alias)
-        return render_template('index.html', short_url=request.host_url + short_alias, history=get_history())
-    return render_template('index.html', history=get_history())
+        return render_template('index.html', short_url=request.host_url + short_alias, history=get_history(), clean_history_button=True)
+    
+    if request.method == 'GET' and 'cleaned' in request.args:
+        return render_template('index.html', history=[], clean_history_button=False, short_url=None)
+    
+    return render_template('index.html', history=get_history(), clean_history_button=len(get_history()) > 0, short_url=None)
 
 
 def get_history():
