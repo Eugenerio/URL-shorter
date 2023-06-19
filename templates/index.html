@@ -1,5 +1,4 @@
 <!-- templates/index.html -->
-
 {% extends 'layout.html' %}
 
 {% block content %}
@@ -24,11 +23,6 @@
 
     <div class="mt-4">
         <h2 class="history-label">History:</h2>
-        {% if clean_history_button %}
-        <form method="POST" action="/clean-history" class="mb-3">
-            <button type="submit" class="btn btn-danger">Clear History</button>
-        </form>
-        {% endif %}
         <ul class="list-group">
             {% for item in history %}
             <li class="list-group-item">
@@ -45,5 +39,20 @@
             {% endfor %}
         </ul>
     </div>
+
+    <div class="mt-4">
+        <form method="POST" action="/clean-history" onsubmit="return confirm('Are you sure you want to clean the history?')">
+            <button type="submit" class="btn btn-danger">Clean History</button>
+        </form>
+    </div>
+
 </div>
 {% endblock %}
+
+<!-- templates/url_preview.html -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">{{ title }}</h5>
+        <p class="card-text">{{ description }}</p>
+    </div>
+</div>

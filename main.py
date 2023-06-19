@@ -6,30 +6,33 @@ import validators
 import requests
 from bs4 import BeautifulSoup
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['DATABASE'] = 'shortener.db'
+
+
 def get_url_preview(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    
+
     title = soup.find('title').get_text()
     description = soup.find('meta', attrs={'name': 'description'})
     description = description['content'] if description else ''
-    
+
     return title, description
 
 
 def store_url(long_url, short_alias):
     if not validators.url(long_url):
         return 'Invalid URL'
-    
+
     conn = sqlite3.connect(app.config['DATABASE'])
     c = conn.cursor()
     c.execute('INSERT INTO urls (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
     conn.commit()
+    c.execute('INSERT INTO history (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
+    conn.commit()
     conn.close()
-
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['DATABASE'] = 'shortener.db'
 
 
 def generate_short_alias():
@@ -45,13 +48,6 @@ def create_database():
                  long_url TEXT,
                  short_alias TEXT UNIQUE)''')
     conn.commit()
-    conn.close()
-    create_history_table()
-
-
-def create_history_table():
-    conn = sqlite3.connect(app.config['DATABASE'])
-    c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS history
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                  long_url TEXT,
@@ -59,6 +55,16 @@ def create_history_table():
                  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
     conn.close()
+
+
+def get_long_url(short_alias):
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('SELECT long_url FROM urls WHERE short_alias = ?', (short_alias,))
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else None
+
 
 @app.route('/clean-history', methods=['POST'])
 def clean_history():
@@ -73,30 +79,10 @@ def clean_history():
 def get_history():
     conn = sqlite3.connect(app.config['DATABASE'])
     c = conn.cursor()
-    c.execute('SELECT * FROM urls ORDER BY id DESC')
+    c.execute('SELECT * FROM history ORDER BY timestamp DESC')
     result = c.fetchall()
     conn.close()
     return result
-
-
-def store_url(long_url, short_alias):
-    conn = sqlite3.connect(app.config['DATABASE'])
-    c = conn.cursor()
-    c.execute('INSERT INTO urls (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
-    conn.commit()
-    c.execute('INSERT INTO history (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
-    conn.commit()
-    conn.close()
-
-
-
-def get_long_url(short_alias):
-    conn = sqlite3.connect(app.config['DATABASE'])
-    c = conn.cursor()
-    c.execute('SELECT long_url FROM urls WHERE short_alias = ?', (short_alias,))
-    result = c.fetchone()
-    conn.close()
-    return result[0] if result else None
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -105,22 +91,16 @@ def index():
         long_url = request.form['url']
         short_alias = generate_short_alias()
         store_url(long_url, short_alias)
-        return render_template('index.html', short_url=request.host_url + short_alias, history=get_history(), clean_history_button=True)
-    
-    if request.method == 'GET' and 'cleaned' in request.args:
-        return render_template('index.html', history=[], clean_history_button=False, short_url=None)
-    
-    return render_template('index.html', history=get_history(), clean_history_button=len(get_history()) > 0, short_url=None)
+        return render_template('index.html', short_url=request.host_url + short_alias, history=get_history())
+
+    return render_template('index.html', history=get_history(), short_url=None, clean_history_button=True)
 
 
-def get_history():
-    conn = sqlite3.connect(app.config['DATABASE'])
-    c = conn.cursor()
-    c.execute('SELECT * FROM history ORDER BY timestamp DESC')
-    result = c.fetchall()
-    conn.close()
-    return result
-
+@app.route('/url-preview', methods=['POST'])
+def url_preview():
+    url = request.form['url']
+    title, description = get_url_preview(url)
+    return render_template('url_preview.html', title=title, description=description)
 
 
 @app.route('/<short_alias>')
