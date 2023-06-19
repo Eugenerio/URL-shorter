@@ -23,6 +23,20 @@ def create_database():
                  short_alias TEXT UNIQUE)''')
     conn.commit()
     conn.close()
+    create_history_table()
+
+
+def create_history_table():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS history
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 long_url TEXT,
+                 short_alias TEXT,
+                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    conn.commit()
+    conn.close()
+
 
 
 def store_url(long_url, short_alias):
@@ -30,7 +44,10 @@ def store_url(long_url, short_alias):
     c = conn.cursor()
     c.execute('INSERT INTO urls (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
     conn.commit()
+    c.execute('INSERT INTO history (long_url, short_alias) VALUES (?, ?)', (long_url, short_alias))
+    conn.commit()
     conn.close()
+
 
 
 def get_long_url(short_alias):
@@ -48,8 +65,18 @@ def index():
         long_url = request.form['url']
         short_alias = generate_short_alias()
         store_url(long_url, short_alias)
-        return render_template('index.html', short_url=request.host_url + short_alias)
-    return render_template('index.html')
+        return render_template('index.html', short_url=request.host_url + short_alias, history=get_history())
+    return render_template('index.html', history=get_history())
+
+
+def get_history():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('SELECT * FROM history ORDER BY timestamp DESC')
+    result = c.fetchall()
+    conn.close()
+    return result
+
 
 
 @app.route('/<short_alias>')

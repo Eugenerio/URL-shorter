@@ -21,5 +21,24 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="mt-4">
+        <h2 class="history-label">History:</h2>
+        <ul class="list-group">
+            {% for item in history %}
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-9">
+                        <p class="mb-0">{{ item[1] }}</p>
+                        <small class="text-muted">{{ item[2] }}</small>
+                    </div>
+                    <div class="col-3">
+                        <a href="{{ item[1] }}" class="btn btn-primary" target="_blank">Visit</a>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 {% endblock %}
