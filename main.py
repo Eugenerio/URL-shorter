@@ -37,6 +37,23 @@ def create_history_table():
     conn.commit()
     conn.close()
 
+@app.route('/clean-history', methods=['POST'])
+def clean_history():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('DELETE FROM history')
+    conn.commit()
+    conn.close()
+    return '', 204
+
+
+def get_history():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    c = conn.cursor()
+    c.execute('SELECT * FROM urls ORDER BY id DESC')
+    result = c.fetchall()
+    conn.close()
+    return result
 
 
 def store_url(long_url, short_alias):
